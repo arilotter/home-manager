@@ -320,8 +320,11 @@ in {
             ${postBuild}
           '';
 
-        generateCompletions = package:
-          pkgs.runCommand "${package.name}-fish-completions" {
+            generateCompletions = package: pkgs.runCommandLocal
+              ( with lib.strings; let
+                  storeLength = stringLength storeDir + 34; # Nix' StorePath::HashLen + 2 for the separating slash and dash
+                  pathName = substring storeLength (stringLength package - storeLength) package;
+                in (package.name or pathName) + "_fish-completions") {
             srcs = [ package ] ++ filter (p: p != null)
               (builtins.map (outName: package.${outName} or null)
                 config.home.extraOutputsToInstall);
